@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.modules.versions.router import router as versions_router
+
 app = FastAPI(
     title="OCPI 2.2.1-d2 Simulator",
     version="1.0.0",
@@ -13,3 +15,6 @@ def root():
         "supported_roles": ["CPO", "EMSP"],
         "status": "running",
     }
+
+
+app.include_router(versions_router)
