@@ -1,5 +1,4 @@
 from enum import Enum
-
 from pydantic import BaseModel, HttpUrl
 
 
@@ -9,15 +8,15 @@ class InterfaceRole(str, Enum):
 
 
 class ModuleID(str, Enum):
+    CDRS = "cdrs"
+    CHARGING_PROFILES = "chargingprofiles"
+    COMMANDS = "commands"
     CREDENTIALS = "credentials"
+    HUBCLIENTINFO = "hubclientinfo"
     LOCATIONS = "locations"
     SESSIONS = "sessions"
-    CDRS = "cdrs"
     TARIFFS = "tariffs"
     TOKENS = "tokens"
-    COMMANDS = "commands"
-    CHARGING_PROFILES = "chargingprofiles"
-    HUB_CLIENT_INFO = "hubclientinfo"
 
 
 class Version(BaseModel):
