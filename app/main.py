@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from app.modules.credentials.router import router as credentials_router
 from app.modules.versions.router import router as versions_router
 
 app = FastAPI(
@@ -18,3 +18,4 @@ def root():
 
 
 app.include_router(versions_router)
+app.include_router(credentials_router)
