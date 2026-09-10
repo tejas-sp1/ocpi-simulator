@@ -18,14 +18,24 @@ router = APIRouter(
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # CPO - Versions
-# ---------------------------------------------------------
-@router.get("/cpo/versions", response_model=OCPIResponse)
+# =========================================================
+
+@router.get(
+    "/cpo/versions",
+    response_model=OCPIResponse[list[Version]],
+)
 def get_cpo_versions(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
-    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
 ):
     versions = [
         Version(
@@ -44,14 +54,24 @@ def get_cpo_versions(
     )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # CPO - Version Details
-# ---------------------------------------------------------
-@router.get("/cpo/2.2.1", response_model=OCPIResponse)
+# =========================================================
+
+@router.get(
+    "/cpo/2.2.1",
+    response_model=OCPIResponse[VersionDetails],
+)
 def get_cpo_version_details(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
-    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
 ):
     version_details = VersionDetails(
         version="2.2.1",
@@ -74,14 +94,24 @@ def get_cpo_version_details(
     )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # eMSP - Versions
-# ---------------------------------------------------------
-@router.get("/emsp/versions", response_model=OCPIResponse)
+# =========================================================
+
+@router.get(
+    "/emsp/versions",
+    response_model=OCPIResponse[list[Version]],
+)
 def get_emsp_versions(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
-    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
 ):
     versions = [
         Version(
@@ -100,14 +130,24 @@ def get_emsp_versions(
     )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # eMSP - Version Details
-# ---------------------------------------------------------
-@router.get("/emsp/2.2.1", response_model=OCPIResponse)
+# =========================================================
+
+@router.get(
+    "/emsp/2.2.1",
+    response_model=OCPIResponse[VersionDetails],
+)
 def get_emsp_version_details(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
-    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
 ):
     version_details = VersionDetails(
         version="2.2.1",

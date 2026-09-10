@@ -21,24 +21,19 @@ router = APIRouter(
 # =========================================================
 # Registration state
 # =========================================================
-#
-# These store the credentials received from the connected
-# remote OCPI party.
-#
-# None = no party is currently registered.
-#
+
+# Stores credentials received from the connected remote CPO.
 registered_cpo_client: Credentials | None = None
+
+# Stores credentials received from the connected remote eMSP.
 registered_emsp_client: Credentials | None = None
 
 
 # =========================================================
 # Server credentials
 # =========================================================
-#
-# These are the credentials of THIS simulator that are
-# returned to the remote party during GET/POST/PUT.
-#
 
+# Credentials belonging to this simulator when acting as CPO.
 CPO_SERVER_CREDENTIALS = Credentials(
     token=uuid4().hex,
     url=HttpUrl(
@@ -60,6 +55,7 @@ CPO_SERVER_CREDENTIALS = Credentials(
 )
 
 
+# Credentials belonging to this simulator when acting as eMSP.
 EMSP_SERVER_CREDENTIALS = Credentials(
     token=uuid4().hex,
     url=HttpUrl(
@@ -88,18 +84,21 @@ EMSP_SERVER_CREDENTIALS = Credentials(
 
 @router.get(
     "/cpo/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def get_cpo_credentials(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Return the CPO simulator's credentials.
+    Return this simulator's CPO credentials.
     """
 
     return create_ocpi_response(
@@ -112,12 +111,15 @@ def get_cpo_credentials(
 
 @router.post(
     "/cpo/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def register_cpo_credentials(
     credentials: Credentials,
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
@@ -150,19 +152,22 @@ def register_cpo_credentials(
 
 @router.put(
     "/cpo/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def update_cpo_credentials(
     credentials: Credentials,
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Update the credentials of an already registered party.
+    Update credentials of an already registered remote party.
     """
 
     global registered_cpo_client
@@ -188,18 +193,21 @@ def update_cpo_credentials(
 
 @router.delete(
     "/cpo/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[None],
 )
 def delete_cpo_credentials(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Remove the registered remote party.
+    Remove the registered remote CPO party.
     """
 
     global registered_cpo_client
@@ -227,18 +235,21 @@ def delete_cpo_credentials(
 
 @router.get(
     "/emsp/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def get_emsp_credentials(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Return the eMSP simulator's credentials.
+    Return this simulator's eMSP credentials.
     """
 
     return create_ocpi_response(
@@ -251,12 +262,15 @@ def get_emsp_credentials(
 
 @router.post(
     "/emsp/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def register_emsp_credentials(
     credentials: Credentials,
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
@@ -289,19 +303,22 @@ def register_emsp_credentials(
 
 @router.put(
     "/emsp/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[Credentials],
 )
 def update_emsp_credentials(
     credentials: Credentials,
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Update the credentials of an already registered party.
+    Update credentials of an already registered remote party.
     """
 
     global registered_emsp_client
@@ -327,18 +344,21 @@ def update_emsp_credentials(
 
 @router.delete(
     "/emsp/2.2.1/credentials",
-    response_model=OCPIResponse,
+    response_model=OCPIResponse[None],
 )
 def delete_emsp_credentials(
     response: Response,
-    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
     x_correlation_id: str = Header(
         ...,
         alias="X-Correlation-ID",
     ),
 ):
     """
-    Remove the registered remote party.
+    Remove the registered remote eMSP party.
     """
 
     global registered_emsp_client
