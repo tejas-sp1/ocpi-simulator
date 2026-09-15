@@ -153,7 +153,37 @@ def save_cpo_credentials(
         ),
         encoding="utf-8",
     )
+def import_cpo_credentials(
+    credentials: Credentials,
+) -> Credentials:
+    """
+    Import CPO credentials that were already issued
+    by the remote CPO and persist them locally.
 
+    This is a simulator-management operation and is not
+    part of the standard OCPI protocol.
+    """
+
+    global remote_cpo_credentials
+    global handshake_completed
+
+    # Validate the credentials before storing them.
+    validated_credentials = Credentials.model_validate(
+        credentials.model_dump(mode="json")
+    )
+
+    # Store in memory.
+    remote_cpo_credentials = validated_credentials
+
+    # Persist securely in the ignored data/ directory.
+    save_cpo_credentials(
+        validated_credentials
+    )
+
+    # Mark the connection as established.
+    handshake_completed = True
+
+    return validated_credentials
 
 # =========================================================
 # Load CPO credentials
@@ -182,7 +212,45 @@ def load_cpo_credentials() -> Credentials | None:
         TypeError,
     ):
         return None
+def get_connection_status() -> dict[str, object]:
+    """
+    Return the current eMSP-to-CPO connection status.
+    """
 
+    credentials = get_stored_cpo_credentials()
+
+    if credentials is None:
+        return {
+            "connected": False,
+            "role": "EMSP",
+            "ocpi_version": "2.2.1",
+            "cpo_name": None,
+            "cpo_party_id": None,
+            "cpo_country_code": None,
+        }
+
+    cpo_role = credentials.roles[0] if credentials.roles else None
+
+    return {
+        "connected": True,
+        "role": "EMSP",
+        "ocpi_version": "2.2.1",
+        "cpo_name": (
+            cpo_role.business_details.name
+            if cpo_role
+            else None
+        ),
+        "cpo_party_id": (
+            cpo_role.party_id
+            if cpo_role
+            else None
+        ),
+        "cpo_country_code": (
+            cpo_role.country_code
+            if cpo_role
+            else None
+        ),
+    }
 
 # =========================================================
 # Get existing connection
