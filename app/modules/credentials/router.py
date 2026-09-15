@@ -1,18 +1,19 @@
 from base64 import b64decode, b64encode
 from binascii import Error as BinasciiError
 from secrets import token_hex
+import os
 
 from fastapi import APIRouter, Header, HTTPException, Response
 from pydantic import HttpUrl
 
 from app.core.response import OCPIResponse, create_ocpi_response
+from app.modules.credentials.client import perform_emsp_handshake
 from app.modules.credentials.schemas import (
     BusinessDetails,
     Credentials,
     CredentialsRole,
     Role,
 )
-
 
 router = APIRouter(
     prefix="/ocpi",
@@ -29,7 +30,12 @@ router = APIRouter(
 #
 
 CPO_BOOTSTRAP_TOKEN = "CPO-SIMULATOR-TOKEN-A"
-EMSP_BOOTSTRAP_TOKEN = "EMSP-SIMULATOR-TOKEN-A"
+EMSP_BOOTSTRAP_TOKEN: str = os.getenv("EMSP_TOKEN_A", "")
+
+if not EMSP_BOOTSTRAP_TOKEN:
+    raise RuntimeError(
+        "EMSP_TOKEN_A environment variable is not set."
+    )
 
 
 # =========================================================
@@ -208,18 +214,18 @@ CPO_SERVER_CREDENTIALS = Credentials(
 EMSP_SERVER_CREDENTIALS = Credentials(
     token=EMSP_BOOTSTRAP_TOKEN,
     url=HttpUrl(
-        "http://localhost:8000/ocpi/emsp/versions"
+        "https://growing-lagged-skittle.ngrok-free.dev/ocpi/emsp/versions"
     ),
     roles=[
         CredentialsRole(
             role=Role.EMSP,
             business_details=BusinessDetails(
-                name="OCPI Simulator eMSP",
+                name="TejasSP",
                 website=HttpUrl(
                     "http://localhost:8000"
                 ),
             ),
-            party_id="SIM",
+            party_id="TSP",
             country_code="IN",
         )
     ],
@@ -627,4 +633,43 @@ def delete_emsp_credentials(
         response=response,
         request_id=x_request_id,
         correlation_id=x_correlation_id,
+    )
+# =========================================================
+# eMSP - Perform CPO Credentials Handshake
+# =========================================================
+
+@router.post(
+    "/emsp/handshake",
+    response_model=OCPIResponse[Credentials],
+)
+async def emsp_handshake(
+    response: Response,
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
+):
+    """
+    Start the OCPI Credentials handshake with the
+    configured Numocity CPO.
+    """
+
+    try:
+        cpo_credentials = await perform_emsp_handshake()
+
+        return create_ocpi_response(
+            data=cpo_credentials,
+            response=response,
+            request_id=x_request_id,
+            correlation_id=x_correlation_id,
+        )
+
+    except Exception as exc:
+        raise HTTPException(
+        status_code=502,
+        detail=f"OCPI handshake failed: {repr(exc)}",
     )
