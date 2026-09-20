@@ -6,10 +6,11 @@ from app.core.response import OCPIResponse, create_ocpi_response
 
 from app.modules.locations.schemas import (
     Connector,
+    ConnectorPatch,
     EVSE,
+    EVSEPatch,
     Location,
     LocationPatch,
-    EVSEPatch
 )
 
 from app.modules.locations.service import (
@@ -17,13 +18,13 @@ from app.modules.locations.service import (
     get_connector,
     get_evse,
     get_location,
+    patch_connector,
     patch_evse,
     patch_location,
     update_connector,
     update_evse,
     update_location,
 )
-
 router = APIRouter(
     prefix="/ocpi",
     tags=["Locations"],
@@ -712,6 +713,129 @@ def patch_emsp_evse(
         raise HTTPException(
             status_code=404,
             detail="EVSE not found.",
+        )
+
+    # -----------------------------------------------------
+    # Return OCPI response
+    # -----------------------------------------------------
+
+    return create_ocpi_response(
+        data=None,
+        response=response,
+        request_id=x_request_id,
+        correlation_id=x_correlation_id,
+    )
+
+
+
+# =========================================================
+# eMSP - Connector PATCH Receiver Interface
+# =========================================================
+
+
+@router.patch(
+    "/emsp/2.2.1/locations/{country_code}/{party_id}/{location_id}/{evse_uid}/{connector_id}",
+    response_model=OCPIResponse[None],
+)
+def patch_emsp_connector(
+    country_code: str,
+    party_id: str,
+    location_id: str,
+    evse_uid: str,
+    connector_id: str,
+    patch: ConnectorPatch,
+    response: Response,
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
+):
+    """
+    Apply a partial update to a Connector received from a CPO.
+    """
+
+    # -----------------------------------------------------
+    # Find Location
+    # -----------------------------------------------------
+
+    location = get_location(location_id)
+
+    if location is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Location not found.",
+        )
+
+    # -----------------------------------------------------
+    # Validate country code
+    # -----------------------------------------------------
+
+    if location.country_code != country_code:
+        raise HTTPException(
+            status_code=400,
+            detail="Country code does not match Location data.",
+        )
+
+    # -----------------------------------------------------
+    # Validate party ID
+    # -----------------------------------------------------
+
+    if location.party_id != party_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Party ID does not match Location data.",
+        )
+
+    # -----------------------------------------------------
+    # Find EVSE
+    # -----------------------------------------------------
+
+    evse = get_evse(
+        location_id=location_id,
+        evse_uid=evse_uid,
+    )
+
+    if evse is None:
+        raise HTTPException(
+            status_code=404,
+            detail="EVSE not found.",
+        )
+
+    # -----------------------------------------------------
+    # Find Connector
+    # -----------------------------------------------------
+
+    connector = get_connector(
+        location_id=location_id,
+        evse_uid=evse_uid,
+        connector_id=connector_id,
+    )
+
+    if connector is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Connector not found.",
+        )
+
+    # -----------------------------------------------------
+    # Apply PATCH
+    # -----------------------------------------------------
+
+    updated = patch_connector(
+        location_id=location_id,
+        evse_uid=evse_uid,
+        connector_id=connector_id,
+        patch=patch,
+    )
+
+    if updated is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Connector not found.",
         )
 
     # -----------------------------------------------------

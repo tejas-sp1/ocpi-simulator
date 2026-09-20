@@ -4,6 +4,7 @@ from app.modules.locations.schemas import (
     BusinessDetails,
     Connector,
     ConnectorFormat,
+    ConnectorPatch,
     ConnectorType,
     EVSE,
     EVSEPatch,
@@ -289,6 +290,69 @@ def update_connector(
 
     return connector
 
+
+def patch_connector(
+    location_id: str,
+    evse_uid: str,
+    connector_id: str,
+    patch: ConnectorPatch,
+) -> Connector | None:
+    """
+    Apply a partial update to an existing Connector.
+
+    Only fields explicitly supplied in the PATCH request
+    are changed.
+
+    When a Connector is patched:
+    - Connector.last_updated is updated.
+    - Parent EVSE.last_updated is updated.
+    - Parent Location.last_updated is updated.
+    """
+
+    connector = get_connector(
+        location_id=location_id,
+        evse_uid=evse_uid,
+        connector_id=connector_id,
+    )
+
+    if connector is None:
+        return None
+
+    changes = patch.model_dump(
+        exclude_unset=True
+    )
+
+    new_last_updated = changes.pop("last_updated")
+
+    # Apply only the supplied fields.
+    for field_name, value in changes.items():
+        setattr(
+            connector,
+            field_name,
+            value,
+        )
+
+    # Update Connector timestamp.
+    connector.last_updated = new_last_updated
+
+    # Find the parent EVSE.
+    evse = get_evse(
+        location_id=location_id,
+        evse_uid=evse_uid,
+    )
+
+    if evse is not None:
+        # OCPI requires parent EVSE timestamp update.
+        evse.last_updated = new_last_updated
+
+    # Find the parent Location.
+    location = locations.get(location_id)
+
+    if location is not None:
+        # OCPI requires parent Location timestamp update.
+        location.last_updated = new_last_updated
+
+    return connector
 
 
 def create_location(location: Location) -> Location:

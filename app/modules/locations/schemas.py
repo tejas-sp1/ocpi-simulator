@@ -474,3 +474,19 @@ class EVSEPatch(BaseModel):
     images: list | None = None
 
     last_updated: datetime
+
+class ConnectorPatch(BaseModel):
+    """
+    Partial update for a Connector.
+
+    Only fields supplied in the PATCH request are changed.
+    last_updated is mandatory for every PATCH request.
+    """
+
+    max_voltage: int | None = None
+    max_amperage: int | None = None
+    max_electric_power: int | None = None
+    tariff_ids: list[str] | None = None
+    terms_and_conditions: HttpUrl | None = None
+
+    last_updated: datetime
