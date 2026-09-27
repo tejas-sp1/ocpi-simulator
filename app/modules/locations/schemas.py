@@ -8,6 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+
 class LocationPatch(BaseModel):
     """
     Partial update for a Location.

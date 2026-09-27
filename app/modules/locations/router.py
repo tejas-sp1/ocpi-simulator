@@ -14,6 +14,7 @@ from app.modules.locations.schemas import (
 )
 
 from app.modules.locations.service import (
+    create_location,
     get_all_locations,
     get_connector,
     get_evse,
@@ -30,6 +31,51 @@ router = APIRouter(
     tags=["Locations"],
 )
 
+
+# =========================================================
+# Simulator - Create CPO Location
+# =========================================================
+
+@router.post(
+    "/simulator/cpo/2.2.1/locations",
+    response_model=OCPIResponse[Location],
+)
+def create_cpo_location(
+    location: Location,
+    response: Response,
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
+):
+    """
+    Create a new Location in the simulator's CPO storage.
+
+    This is a simulator-management endpoint used by the
+    frontend to create CPO-owned Location data.
+
+    It is not a standard OCPI Locations endpoint.
+    """
+
+    # Prevent accidental replacement of an existing Location.
+    if get_location(location.id) is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Location with this ID already exists.",
+        )
+
+    created = create_location(location)
+
+    return create_ocpi_response(
+        data=created,
+        response=response,
+        request_id=x_request_id,
+        correlation_id=x_correlation_id,
+    )
 
 # =========================================================
 # CPO - Locations Sender Interface
