@@ -210,6 +210,237 @@ function App() {
   }
 
   return (
+    <>
+      <style>{`
+        /* Layout safety overrides */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .main-area,
+        .content,
+        .panel,
+        .two-col,
+        .three-col,
+        .flow-large,
+        .summary-grid,
+        .credential-summary,
+        .version-card,
+        .endpoint-grid,
+        .endpoint-row {
+          min-width: 0;
+        }
+
+        .content {
+          overflow-x: hidden;
+        }
+
+        .panel {
+          overflow: hidden;
+        }
+
+        .panel-title {
+          display: flex !important;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .flow-large {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 26px minmax(0, 1fr) 26px minmax(0, 1fr) 26px minmax(0, 1fr) !important;
+          gap: 10px !important;
+          align-items: stretch !important;
+          width: 100%;
+        }
+
+        .flow-large > div:not(.flow-arrow) {
+          min-width: 0;
+          width: 100%;
+          min-height: 112px;
+          padding: 14px !important;
+          overflow: hidden;
+        }
+
+        .flow-large > div:not(.flow-arrow) strong,
+        .flow-large > div:not(.flow-arrow) small {
+          display: block;
+          max-width: 100%;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          line-height: 1.35;
+        }
+
+        .flow-arrow {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          min-width: 0;
+          flex: 0 0 auto;
+        }
+
+        /* Location header: badge and station name must always have separate space. */
+        .remote-location-main {
+          display: grid !important;
+          grid-template-columns: max-content minmax(0, 1fr) !important;
+          column-gap: 16px !important;
+          row-gap: 6px !important;
+          align-items: start !important;
+          width: 100%;
+        }
+
+        .remote-location-main > .version-badge {
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          width: auto !important;
+          min-width: 82px !important;
+          max-width: 130px !important;
+          padding: 9px 12px !important;
+          white-space: nowrap !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .remote-location-main > div:last-child {
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .remote-location-main > div:last-child strong,
+        .remote-location-main > div:last-child .muted {
+          display: block;
+          max-width: 100%;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .location-mini-summary {
+          display: flex !important;
+          flex-wrap: wrap !important;
+          align-items: center;
+          gap: 8px 12px !important;
+          margin-top: 12px !important;
+          width: 100%;
+        }
+
+        .location-mini-summary span {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        .remote-evse-row {
+          display: grid !important;
+          grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr) !important;
+          gap: 14px !important;
+          width: 100%;
+          padding: 12px !important;
+          margin-top: 10px;
+        }
+
+        .remote-evse-row > div,
+        .remote-evse-row > code {
+          min-width: 0 !important;
+          max-width: 100%;
+        }
+
+        .remote-evse-row code {
+          display: block;
+          white-space: normal !important;
+          overflow-wrap: anywhere !important;
+          word-break: break-word;
+          line-height: 1.45;
+        }
+
+        .simulation-explanation {
+          display: grid !important;
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 16px !important;
+          width: 100%;
+        }
+
+        .simulation-explanation > div {
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .simulation-explanation p {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+
+        .summary-grid,
+        .credential-summary {
+          width: 100%;
+        }
+
+        .summary-grid > *,
+        .credential-summary > * {
+          min-width: 0;
+        }
+
+        .summary-grid code,
+        .credential-summary code,
+        .endpoint-grid code,
+        .version-card code {
+          display: block;
+          max-width: 100%;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          white-space: normal;
+        }
+
+        input, select, button {
+          max-width: 100%;
+        }
+
+        .button-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .button-row > button {
+          min-width: 0;
+        }
+
+        @media (max-width: 1200px) {
+          .flow-large {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          .flow-arrow {
+            display: none !important;
+          }
+
+          .simulation-explanation {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+
+        @media (max-width: 820px) {
+          .two-col,
+          .three-col,
+          .simulation-explanation,
+          .summary-grid,
+          .credential-summary,
+          .remote-evse-row {
+            grid-template-columns: 1fr !important;
+          }
+
+          .remote-location-main {
+            grid-template-columns: 1fr !important;
+          }
+
+          .remote-location-main > .version-badge {
+            justify-self: start;
+          }
+
+          .flow-large {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
     <div className="app-shell">
       <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="brand">
@@ -360,6 +591,7 @@ function App() {
         </div>
       )}
     </div>
+    </>
   )
 }
 
@@ -797,7 +1029,6 @@ function Credentials({
       )
 
       setData(body.data)
-
       setMessage(
         'Credentials loaded successfully. Token is masked in this UI.'
       )
@@ -815,43 +1046,11 @@ function Credentials({
     }
   }
 
-  const handshake = async () => {
-    setError('')
-    setMessage('')
-
-    try {
-      const body =
-        await apiFetch<OcpiResponse<Credentials>>(
-          '/ocpi/emsp/handshake',
-          { method: 'POST' }
-        )
-
-      setData(body.data)
-
-      setMessage(
-        'eMSP handshake completed / reused the stored connection.'
-      )
-
-      onActivity({
-        time: new Date().toLocaleTimeString(),
-        from: 'eMSP simulator',
-        to: 'CPO',
-        method: 'POST',
-        endpoint: '/ocpi/emsp/handshake',
-        status: 200,
-      })
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'Handshake failed'
-      )
-    }
-  }
-
   return (
     <>
       <SectionHeader
         title="Credentials"
-        subtitle="Inspect the credential state and exercise the authentication bootstrap."
+        subtitle="Inspect OCPI credential endpoints. Remote CPO registration is performed from Simulation."
       />
 
       <div className="two-col">
@@ -865,18 +1064,14 @@ function Credentials({
 
           <div className="switch-row">
             <button
-              className={
-                kind === 'cpo' ? 'switch active' : 'switch'
-              }
+              className={kind === 'cpo' ? 'switch active' : 'switch'}
               onClick={() => setKind('cpo')}
             >
               CPO
             </button>
 
             <button
-              className={
-                kind === 'emsp' ? 'switch active' : 'switch'
-              }
+              className={kind === 'emsp' ? 'switch active' : 'switch'}
               onClick={() => setKind('emsp')}
             >
               eMSP
@@ -886,7 +1081,7 @@ function Credentials({
           <label>
             Authorization header{' '}
             <span className="muted">
-              (only needed for secured GET/POST/PUT/DELETE tests)
+              (only needed for secured endpoint tests)
             </span>
           </label>
 
@@ -899,31 +1094,26 @@ function Credentials({
           <div className="button-row">
             <button
               className="primary"
-              onClick={fetchCredentials}
+              onClick={() => void fetchCredentials()}
             >
               <LockKeyhole size={16} />
               Fetch credentials
             </button>
-
-            <button
-              className="secondary"
-              onClick={() => void handshake()}
-            >
-              <Zap size={16} />
-              Run eMSP handshake
-            </button>
           </div>
 
-          <div className="endpoint-chip">
-            GET {path}
+          <div className="endpoint-chip">GET {path}</div>
+
+          <div className="flow-note">
+            <Zap size={17} />
+            <span>
+              To connect to a remote CPO, use the Simulation page. The Hub
+              first discovers the CPO Versions endpoint, then performs the
+              Credentials exchange.
+            </span>
           </div>
 
           {(error || message) && (
-            <div
-              className={
-                error ? 'error-box' : 'success-box'
-              }
-            >
+            <div className={error ? 'error-box' : 'success-box'}>
               {error || message}
             </div>
           )}
@@ -931,8 +1121,8 @@ function Credentials({
 
         <div className="panel">
           <div className="panel-title">
-            <span>Connection state</span>
-            <span className="success-badge">READY</span>
+            <span>Credential state</span>
+            <span className="success-badge">OCPI 2.2.1</span>
           </div>
 
           <div className="credential-summary">
@@ -943,41 +1133,27 @@ function Credentials({
 
             <Summary
               label="Party ID"
-              value={
-                data?.roles?.[0]?.party_id || '—'
-              }
+              value={data?.roles?.[0]?.party_id || '—'}
             />
 
             <Summary
               label="Country"
-              value={
-                data?.roles?.[0]?.country_code || '—'
-              }
+              value={data?.roles?.[0]?.country_code || '—'}
             />
 
-            <Summary
-              label="URL"
-              value={data?.url || '—'}
-            />
+            <Summary label="URL" value={data?.url || '—'} />
           </div>
 
           {data?.roles?.[0]?.business_details && (
             <div className="callout">
               <UsersRound size={18} />
-
               <div>
                 <strong>
-                  {
-                    data.roles[0].business_details
-                      .name || 'Business details'
-                  }
+                  {data.roles[0].business_details.name || 'Business details'}
                 </strong>
-
                 <p>
-                  {
-                    data.roles[0].business_details
-                      .website || 'No website provided'
-                  }
+                  {data.roles[0].business_details.website ||
+                    'No website provided'}
                 </p>
               </div>
             </div>
@@ -985,10 +1161,9 @@ function Credentials({
 
           <div className="security-note">
             <ShieldCheck size={17} />
-
             <span>
-              Authentication tokens are intentionally
-              masked/not exposed in the overview.
+              Authentication tokens are intentionally masked/not exposed in
+              the overview.
             </span>
           </div>
         </div>
@@ -997,15 +1172,14 @@ function Credentials({
       <div className="panel">
         <div className="panel-title">
           <span>Credentials flow</span>
+          <span className="muted">Remote CPO connection</span>
         </div>
 
         <div className="flow-large">
           <div>
             <span className="step-dot">1</span>
             <strong>Versions</strong>
-            <small>
-              GET /versions + GET /2.2.1
-            </small>
+            <small>GET /versions + GET /2.2.1</small>
           </div>
 
           <div className="flow-arrow">→</div>
@@ -1021,7 +1195,7 @@ function Credentials({
           <div>
             <span className="step-dot">3</span>
             <strong>Authenticated</strong>
-            <small>Use the returned token</small>
+            <small>Use returned Token C</small>
           </div>
         </div>
       </div>
@@ -1053,6 +1227,56 @@ function Locations({
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [selected, setSelected] = useState<Location | null>(null)
+
+
+    // ---------------------------------------------------------
+  // eMSP - received Locations
+  // ---------------------------------------------------------
+  const [receivedLocations, setReceivedLocations] =
+    useState<Location[]>([])
+
+  const [receivedLoading, setReceivedLoading] =
+    useState(false)
+
+  const [receivedError, setReceivedError] =
+    useState('')
+
+  const loadReceivedLocations = async () => {
+    setReceivedLoading(true)
+    setReceivedError('')
+
+    try {
+      const body =
+        await apiFetch<OcpiResponse<Location[]>>(
+          '/ocpi/simulator/emsp/received-locations'
+        )
+
+      if (
+        body.status_code !== undefined &&
+        body.status_code !== 1000
+      ) {
+        throw new Error(
+          body.status_message ||
+            `Could not load received Locations`
+        )
+      }
+
+      setReceivedLocations(body.data || [])
+    } catch (e) {
+      setReceivedError(
+        e instanceof Error
+          ? e.message
+          : 'Could not load eMSP received Locations'
+      )
+    } finally {
+      setReceivedLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadReceivedLocations()
+  }, [])
+
 
   // ---------------------------------------------------------
   // CREATE LOCATION
@@ -2060,7 +2284,7 @@ const applyConnectorPut = async (
     <>
       <SectionHeader
         title="Locations"
-        subtitle="CPO sender view: Locations → EVSEs → Connectors."
+        subtitle="CPO sender and eMSP receiver view: Locations → EVSEs → Connectors."
         action={
           <div className="button-row">
             <button
@@ -2072,12 +2296,17 @@ const applyConnectorPut = async (
             </button>
 
             <button
-              className="secondary"
-              onClick={() => void reload()}
-            >
-              <RefreshCw size={16} />
-              Refresh
-            </button>
+  className="secondary"
+  onClick={() => {
+    void Promise.all([
+      reload(),
+      loadReceivedLocations(),
+    ])
+  }}
+>
+  <RefreshCw size={16} />
+  Refresh
+</button>
           </div>
         }
       />
@@ -2159,6 +2388,138 @@ const applyConnectorPut = async (
           Apply
         </button>
       </div>
+
+
+{/* =====================================================
+    eMSP RECEIVED LOCATIONS
+===================================================== */}
+<div className="panel table-panel">
+  <div className="panel-title">
+    <span>eMSP Received Locations</span>
+
+    <div className="button-row">
+      <span className="count-badge">
+        {receivedLocations.length}
+      </span>
+
+      <button
+        className="secondary"
+        onClick={() => void loadReceivedLocations()}
+        disabled={receivedLoading}
+      >
+        <RefreshCw size={15} />
+
+        {receivedLoading
+          ? 'Loading...'
+          : 'Refresh'}
+      </button>
+    </div>
+  </div>
+
+  <div className="security-note">
+    <MapPin size={17} />
+
+    <span>
+      These Locations were received by the eMSP
+      through the OCPI Locations Receiver using
+      CPO → eMSP PUT.
+    </span>
+  </div>
+
+  {receivedError && (
+    <div className="error-box">
+      {receivedError}
+    </div>
+  )}
+
+  {receivedLoading ? (
+    <div className="empty">
+      Loading eMSP received Locations...
+    </div>
+  ) : receivedLocations.length === 0 ? (
+    <div className="empty">
+      No Locations have been received by the eMSP yet.
+      Run the CPO → eMSP Location push from the
+      Simulation page.
+    </div>
+  ) : (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Location ID</th>
+            <th>Name</th>
+            <th>Party</th>
+            <th>City</th>
+            <th>EVSEs</th>
+            <th>Connectors</th>
+            <th>Status</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {receivedLocations.map((location) => {
+            const evses = location.evses || []
+
+            const connectors = evses.reduce(
+              (sum, evse) =>
+                sum +
+                (evse.connectors?.length || 0),
+              0
+            )
+
+            const status =
+              evses[0]?.status || '—'
+
+            return (
+              <tr key={location.id}>
+                <td>
+                  <strong>{location.id}</strong>
+                </td>
+
+                <td>
+                  {location.name || '—'}
+                </td>
+
+                <td>
+                  {location.party_id}
+                </td>
+
+                <td>
+                  {location.city}
+                </td>
+
+                <td>
+                  {evses.length}
+                </td>
+
+                <td>
+                  {connectors}
+                </td>
+
+                <td>
+                  <span
+                    className={`status ${status.toLowerCase()}`}
+                  >
+                    {status}
+                  </span>
+                </td>
+
+                <td>
+                  {new Date(
+                    location.last_updated
+                  ).toLocaleString()}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
 
       {/* =====================================================
           LOCATION TABLE
@@ -3586,490 +3947,768 @@ function Simulation({
   ) => void
   busy: boolean
 }) {
-  const [scenario, setScenario] = useState(
-    'Credential Registration'
+  type RemoteConnection = {
+    connected: boolean
+    role: string
+    version: string | null
+    remote_versions_url: string | null
+    remote_version_url: string | null
+    credentials_url: string | null
+    locations_url: string | null
+    remote_cpo: {
+      name: string | null
+      party_id: string | null
+      country_code: string | null
+    } | null
+    token_c_masked: string | null
+  }
+
+  type LocationPushResult = {
+    direction: string
+    method: string
+    url: string
+    location: Location
+    emsp_response: {
+      status_code?: number
+      status_message?: string
+      data?: Location
+    }
+  }
+
+  const [versionsUrl, setVersionsUrl] = useState(
+    'http://127.0.0.1:9001/ocpi/cpo/versions'
   )
 
-  const [running, setRunning] = useState(false)
-  const [completed, setCompleted] = useState(false)
-  const [error, setError] = useState('')
+  const [tokenA, setTokenA] = useState(
+    'MOCK-CPO-TOKEN-A'
+  )
 
-  const [backendResult, setBackendResult] =
-    useState<Credentials | null>(null)
+  const [emspVersionsUrl, setEmspVersionsUrl] = useState(
+    'http://127.0.0.1:8000/ocpi/emsp/versions'
+  )
+
+  const [partyId, setPartyId] = useState('TSP')
+  const [countryCode, setCountryCode] = useState('IN')
+  const [businessName, setBusinessName] = useState('TejasSP')
+
+  const [connection, setConnection] =
+    useState<RemoteConnection | null>(null)
 
   const [locationResult, setLocationResult] =
     useState<Location[]>([])
 
-  const [steps, setSteps] = useState<
-    Array<{
-      label: string
-      status:
-        | 'Pending'
-        | 'Running'
-        | 'Completed'
-        | 'Failed'
-    }>
-  >([])
+  const [running, setRunning] = useState(false)
 
-  const run = async () => {
-    setRunning(true)
-    setCompleted(false)
-    setError('')
-    setBackendResult(null)
-    setLocationResult([])
+  const [action, setAction] =
+    useState<'handshake' | 'locations' | null>(null)
 
-    // =======================================================
-    // CREDENTIAL REGISTRATION
-    // =======================================================
-    if (
-      scenario === 'Credential Registration'
-    ) {
-      const handshakeSteps = [
-        'Discover CPO supported versions',
-        'Fetch CPO OCPI 2.2.1 endpoint details',
-        'Locate Credentials receiver endpoint',
-        'Send eMSP credentials',
-        'Store returned CPO credentials',
-      ]
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
-      setSteps(
-        handshakeSteps.map((label) => ({
-          label,
-          status: 'Pending',
-        }))
-      )
-
-      try {
-        setSteps((current) =>
-          current.map((step, index) =>
-            index === 0
-              ? {
-                  ...step,
-                  status: 'Running',
-                }
-              : step
-          )
+  const loadConnection = async () => {
+    try {
+      const body =
+        await apiFetch<OcpiResponse<RemoteConnection>>(
+          '/ocpi/simulator/cpo/connection'
         )
 
-        /*
-         * This is the REAL backend handshake.
-         */
-        const body =
-          await apiFetch<
-            OcpiResponse<Credentials>
-          >(
-            '/ocpi/emsp/handshake',
-            {
-              method: 'POST',
-            }
-          )
-
-        if (
-          body.status_code !== undefined &&
-          body.status_code !== 1000
-        ) {
-          throw new Error(
-            body.status_message ||
-              `OCPI handshake failed with status ${body.status_code}`
-          )
-        }
-
-        setBackendResult(body.data)
-
-        setSteps(
-          handshakeSteps.map((label) => ({
-            label,
-            status: 'Completed',
-          }))
-        )
-
-        setCompleted(true)
-
-        onRun(
-          '/ocpi/emsp/handshake',
-          'POST'
-        )
-      } catch (e) {
-        const message =
-          e instanceof Error
-            ? e.message
-            : 'Simulation failed'
-
-        setError(message)
-
-        setSteps((current) =>
-          current.map((step) => ({
-            ...step,
-            status: 'Failed',
-          }))
-        )
-      } finally {
-        setRunning(false)
-      }
-
-      return
-    }
-
-    // =======================================================
-    // LOCATION SYNC
-    // =======================================================
-    if (scenario === 'Location Sync') {
-      const locationSteps = [
-        'Request CPO Locations',
-        'Receive Location data',
-        'Read EVSE and Connector hierarchy',
-      ]
-
-      setSteps(
-        locationSteps.map((label) => ({
-          label,
-          status: 'Pending',
-        }))
-      )
-
-      try {
-        setSteps((current) =>
-          current.map((step, index) =>
-            index === 0
-              ? {
-                  ...step,
-                  status: 'Running',
-                }
-              : step
-          )
-        )
-
-        /*
-         * REAL backend CPO GET Locations call.
-         *
-         * Using the same endpoint already used by
-         * the Locations screen.
-         */
-        const body =
-          await apiFetch<
-            OcpiResponse<Location[]>
-          >(
-            '/ocpi/cpo/2.2.1/locations?limit=10&offset=0'
-          )
-
-        if (
-          body.status_code !== undefined &&
-          body.status_code !== 1000
-        ) {
-          throw new Error(
-            body.status_message ||
-              `Location request failed with status ${body.status_code}`
-          )
-        }
-
-        const locations =
-          body.data || []
-
-        setLocationResult(locations)
-
-        setSteps(
-          locationSteps.map((label) => ({
-            label,
-            status: 'Completed',
-          }))
-        )
-
-        setCompleted(true)
-
-        onRun(
-          '/ocpi/cpo/2.2.1/locations?limit=10&offset=0',
-          'GET'
-        )
-      } catch (e) {
-        const message =
-          e instanceof Error
-            ? e.message
-            : 'Location sync failed'
-
-        setError(message)
-
-        setSteps((current) =>
-          current.map((step) => ({
-            ...step,
-            status: 'Failed',
-          }))
-        )
-      } finally {
-        setRunning(false)
-      }
+      setConnection(body.data)
+    } catch {
+      // Keep the page usable even if there is no current connection.
     }
   }
+
+  useEffect(() => {
+    void loadConnection()
+  }, [])
+
+  const runHandshake = async () => {
+    setRunning(true)
+    setAction('handshake')
+    setError('')
+    setMessage('')
+    setLocationResult([])
+
+    const steps = [
+      'GET remote CPO /versions using Token A',
+      'Select OCPI 2.2.1 and fetch version details',
+      'Discover Credentials RECEIVER and Locations SENDER endpoints',
+      'POST eMSP credentials and receive Token C',
+      'Store the remote CPO connection for future requests',
+    ]
+
+    try {
+      const body =
+        await apiFetch<OcpiResponse<RemoteConnection>>(
+          '/ocpi/simulator/cpo/handshake',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              versions_url: versionsUrl.trim(),
+              token_a: tokenA.trim(),
+              emsp_versions_url: emspVersionsUrl.trim(),
+              party_id: partyId.trim().toUpperCase(),
+              country_code: countryCode.trim().toUpperCase(),
+              business_name: businessName.trim(),
+            }),
+          }
+        )
+
+      if (
+        body.status_code !== undefined &&
+        body.status_code !== 1000
+      ) {
+        throw new Error(
+          body.status_message ||
+            `Handshake failed with status ${body.status_code}`
+        )
+      }
+
+      setConnection(body.data)
+
+      setMessage(
+        'Handshake completed. The Hub is now connected to the remote CPO.'
+      )
+
+      onRun(
+        '/ocpi/simulator/cpo/handshake',
+        'POST'
+      )
+
+      // Keep the flow text available for the operator.
+      void steps
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Handshake failed'
+      )
+
+      setConnection(null)
+    } finally {
+      setRunning(false)
+      setAction(null)
+    }
+  }
+
+  const pushLocation = async () => {
+    setRunning(true)
+    setAction('locations')
+    setError('')
+    setMessage('')
+
+    try {
+      const body =
+        await apiFetch<
+          OcpiResponse<LocationPushResult>
+        >(
+          '/ocpi/simulator/cpo/push-location',
+          {
+            method: 'POST',
+          }
+        )
+
+      if (
+        body.status_code !== undefined &&
+        body.status_code !== 1000
+      ) {
+        throw new Error(
+          body.status_message ||
+            `Location push failed with status ${body.status_code}`
+        )
+      }
+
+      const result = body.data
+
+      if (!result?.location) {
+        throw new Error(
+          'Location push succeeded but no Location was returned.'
+        )
+      }
+
+      setLocationResult([
+        result.location,
+      ])
+
+      setMessage(
+        'Location pushed successfully from the remote CPO to the Hub.'
+      )
+
+      onRun(
+        '/ocpi/simulator/cpo/push-location',
+        'POST'
+      )
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Location push failed'
+      )
+
+      setLocationResult([])
+    } finally {
+      setRunning(false)
+      setAction(null)
+    }
+  }
+
+  const disconnect = async () => {
+    setRunning(true)
+    setError('')
+    setMessage('')
+
+    try {
+      await apiFetch(
+        '/ocpi/simulator/cpo/connection',
+        {
+          method: 'DELETE',
+        }
+      )
+
+      setConnection(null)
+      setLocationResult([])
+
+      setMessage(
+        'Remote CPO connection cleared.'
+      )
+
+      onRun(
+        '/ocpi/simulator/cpo/connection',
+        'DELETE'
+      )
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Could not disconnect'
+      )
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  const connected =
+    connection?.connected === true
 
   return (
     <>
       <SectionHeader
         title="Simulation"
-        subtitle="Execute an OCPI workflow through the FastAPI backend and inspect the result."
+        subtitle="Connect the Hub to a remote CPO, complete the OCPI Credentials handshake, and receive CPO-pushed Locations."
       />
 
-      {/* =====================================================
-          CONTROLS
-      ===================================================== */}
-      <div className="panel sim-controls">
-        <div>
-          <label>From (Sender)</label>
+      <div className="panel">
+        <div className="panel-title">
+          <span>Remote CPO connection</span>
 
-          <select>
-            <option>CPO (TSP / IN)</option>
-            <option>eMSP (TSP / IN)</option>
-          </select>
-        </div>
-
-        <ArrowLeftRight size={22} />
-
-        <div>
-          <label>To (Receiver)</label>
-
-          <select>
-            <option>eMSP (TSP / IN)</option>
-            <option>CPO (TSP / IN)</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Scenario</label>
-
-          <select
-            value={scenario}
-            onChange={(e) =>
-              setScenario(e.target.value)
+          <span
+            className={
+              connected
+                ? 'success-badge'
+                : 'count-badge'
             }
           >
-            <option>
-              Credential Registration
-            </option>
-
-            <option>
-              Location Sync
-            </option>
-          </select>
+            {connected
+              ? 'CONNECTED'
+              : 'NOT CONNECTED'}
+          </span>
         </div>
 
-        <button
-          className="primary big"
-          onClick={() => void run()}
-          disabled={running || busy}
-        >
-          <Play size={17} />
+        <div className="flow-note">
+          <ArrowLeftRight size={17} />
 
-          {running
-            ? 'RUNNING...'
-            : 'RUN SIMULATION'}
-        </button>
+          <span>
+            The browser talks to the Hub. The Hub
+            then acts as an eMSP client and contacts
+            the separate CPO URL below.
+          </span>
+        </div>
+
+        <div className="two-col">
+          <div>
+            <label>
+              CPO Versions URL
+            </label>
+
+            <input
+              value={versionsUrl}
+              onChange={(e) =>
+                setVersionsUrl(e.target.value)
+              }
+              placeholder="https://cpo.example.com/ocpi/cpo/versions"
+            />
+
+            <div className="endpoint-chip">
+              Hub → GET remote CPO /versions
+            </div>
+          </div>
+
+          <div>
+            <label>
+              Bootstrap Token A
+            </label>
+
+            <input
+              type="password"
+              value={tokenA}
+              onChange={(e) =>
+                setTokenA(e.target.value)
+              }
+              placeholder="CPO-provided Token A"
+            />
+
+            <div className="endpoint-chip">
+              Sent in Authorization: Token &lt;base64&gt;
+            </div>
+          </div>
+        </div>
+
+        <div className="two-col">
+          <div>
+            <label>
+              eMSP Versions URL
+            </label>
+
+            <input
+              value={emspVersionsUrl}
+              onChange={(e) =>
+                setEmspVersionsUrl(e.target.value)
+              }
+              placeholder="https://your-public-host/ocpi/emsp/versions"
+            />
+
+            <div className="muted">
+              URL the CPO would use to discover
+              the Hub after registration.
+            </div>
+          </div>
+
+          <div>
+            <label>
+              eMSP Business Name
+            </label>
+
+            <input
+              value={businessName}
+              onChange={(e) =>
+                setBusinessName(e.target.value)
+              }
+              placeholder="Your platform name"
+            />
+          </div>
+        </div>
+
+        <div className="three-col">
+          <div>
+            <label>
+              eMSP Party ID
+            </label>
+
+            <input
+              value={partyId}
+              onChange={(e) =>
+                setPartyId(e.target.value)
+              }
+              maxLength={3}
+              placeholder="TSP"
+            />
+          </div>
+
+          <div>
+            <label>
+              Country Code
+            </label>
+
+            <input
+              value={countryCode}
+              onChange={(e) =>
+                setCountryCode(e.target.value)
+              }
+              maxLength={2}
+              placeholder="IN"
+            />
+          </div>
+
+          <div>
+            <label>
+              Remote role
+            </label>
+
+            <input
+              value="CPO"
+              readOnly
+            />
+          </div>
+        </div>
+
+        <div className="button-row">
+          <button
+            className="primary big"
+            onClick={() =>
+              void runHandshake()
+            }
+            disabled={
+              running ||
+              busy ||
+              !versionsUrl.trim() ||
+              !tokenA.trim()
+            }
+          >
+            <Zap size={17} />
+
+            {action === 'handshake'
+              ? 'HANDSHAKING...'
+              : 'HANDSHAKE'}
+          </button>
+
+          <button
+            className="secondary big"
+            onClick={() =>
+              void pushLocation()
+            }
+            disabled={
+              running ||
+              busy ||
+              !connected
+            }
+          >
+            <MapPin size={17} />
+
+            {action === 'locations'
+              ? 'PUSHING...'
+              : 'PUSH LOCATION'}
+          </button>
+
+          <button
+            className="secondary"
+            onClick={() =>
+              void loadConnection()
+            }
+            disabled={running}
+          >
+            <RefreshCw size={16} />
+            Refresh connection
+          </button>
+
+          <button
+            className="secondary"
+            onClick={() =>
+              void disconnect()
+            }
+            disabled={
+              running ||
+              !connected
+            }
+          >
+            <X size={16} />
+            Disconnect
+          </button>
+        </div>
       </div>
 
-      {/* =====================================================
-          ERROR
-      ===================================================== */}
-      {error && (
-        <div className="error-box">
-          <strong>Simulation failed:</strong>{' '}
-          {error}
+      {(error || message) && (
+        <div
+          className={
+            error
+              ? 'error-box'
+              : 'success-box'
+          }
+        >
+          {error || message}
         </div>
       )}
 
-      {/* =====================================================
-          CREDENTIAL RESULT
-      ===================================================== */}
-      {scenario ===
-        'Credential Registration' &&
-        completed &&
-        backendResult && (
-          <div className="panel">
-            <div className="panel-title">
-              <span>Backend result</span>
+      <div className="panel">
+        <div className="panel-title">
+          <span>
+            Connection state
+          </span>
 
-              <span className="success-badge">
-                OCPI 1000 · SUCCESS
-              </span>
-            </div>
+          <span
+            className={
+              connected
+                ? 'success-badge'
+                : 'count-badge'
+            }
+          >
+            {connected
+              ? 'OCPI 1000 · SUCCESS'
+              : 'AWAITING HANDSHAKE'}
+          </span>
+        </div>
 
-            <div className="summary-grid">
-              <Summary
-                label="Role"
-                value={
-                  backendResult.roles?.[0]
-                    ?.role || '—'
-                }
-              />
+        {connected && connection ? (
+          <div className="summary-grid">
+            <Summary
+              label="Hub role"
+              value={
+                connection.role || 'EMSP'
+              }
+            />
 
-              <Summary
-                label="Party ID"
-                value={
-                  backendResult.roles?.[0]
-                    ?.party_id || '—'
-                }
-              />
+            <Summary
+              label="OCPI version"
+              value={
+                connection.version || '—'
+              }
+            />
 
-              <Summary
-                label="Country"
-                value={
-                  backendResult.roles?.[0]
-                    ?.country_code || '—'
-                }
-              />
+            <Summary
+              label="Remote CPO"
+              value={
+                connection.remote_cpo?.name ||
+                '—'
+              }
+            />
 
-              <Summary
-                label="Version URL"
-                value={
-                  backendResult.url || '—'
-                }
-              />
-            </div>
+            <Summary
+              label="Remote party"
+              value={
+                connection.remote_cpo
+                  ? `${connection.remote_cpo.country_code || '—'} / ${connection.remote_cpo.party_id || '—'}`
+                  : '—'
+              }
+            />
+
+            <Summary
+              label="Token C"
+              value={
+                connection.token_c_masked ||
+                '—'
+              }
+            />
+
+            <Summary
+              label="Locations endpoint"
+              value={
+                connection.locations_url ||
+                'Not advertised'
+              }
+            />
+          </div>
+        ) : (
+          <div className="empty">
+            Enter the CPO Versions URL and
+            bootstrap Token A, then start the
+            handshake.
           </div>
         )}
+      </div>
 
-      {/* =====================================================
-          LOCATION RESULT
-      ===================================================== */}
-      {scenario === 'Location Sync' &&
-        completed && (
-          <div className="panel">
-            <div className="panel-title">
-              <span>Location sync result</span>
+      <div className="panel">
+        <div className="panel-title">
+          <span>
+            Remote OCPI flow
+          </span>
 
-              <span className="success-badge">
-                {locationResult.length} LOCATION(S)
-              </span>
-            </div>
+          <span className="muted">
+            Hub acts as eMSP client
+          </span>
+        </div>
 
-            {locationResult.length === 0 ? (
-              <div className="empty">
-                No Locations were returned.
-              </div>
-            ) : (
-              locationResult.map((location) => {
-                const evseCount =
-                  location.evses?.length || 0
+        <div className="flow-large">
+          <div>
+            <span className="step-dot">
+              1
+            </span>
 
-                const connectorCount =
-                  (location.evses || []).reduce(
-                    (sum, evse) =>
-                      sum +
-                      (evse.connectors?.length ||
-                        0),
-                    0
-                  )
+            <strong>
+              Discover
+            </strong>
 
-                return (
-                  <div
-                    className="version-card"
-                    key={location.id}
-                  >
-                    <div>
-                      <strong>
+            <small>
+              GET CPO /versions
+            </small>
+          </div>
+
+          <div className="flow-arrow">
+            →
+          </div>
+
+          <div>
+            <span className="step-dot">
+              2
+            </span>
+
+            <strong>
+              Version
+            </strong>
+
+            <small>
+              GET CPO /2.2.1
+            </small>
+          </div>
+
+          <div className="flow-arrow">
+            →
+          </div>
+
+          <div>
+            <span className="step-dot">
+              3
+            </span>
+
+            <strong>
+              Credentials
+            </strong>
+
+            <small>
+              POST /credentials
+            </small>
+          </div>
+
+          <div className="flow-arrow">
+            →
+          </div>
+
+          <div>
+            <span className="step-dot">
+              4
+            </span>
+
+            <strong>
+              Locations
+            </strong>
+
+            <small>
+              PUT CPO Location to eMSP
+            </small>
+          </div>
+        </div>
+      </div>
+
+      {locationResult.length > 0 && (
+        <div className="panel">
+          <div className="panel-title">
+            <span>
+              CPO-pushed Locations
+            </span>
+
+            <span className="success-badge">
+              {locationResult.length}{' '}
+              LOCATION(S)
+            </span>
+          </div>
+
+          {locationResult.map(
+            (location) => {
+              const evseCount =
+                location.evses?.length ||
+                0
+
+              const connectorCount =
+                (
+                  location.evses || []
+                ).reduce(
+                  (sum, evse) =>
+                    sum +
+                    (
+                      evse.connectors ||
+                      []
+                    ).length,
+                  0
+                )
+
+              const chargingCount =
+                (
+                  location.evses || []
+                ).filter(
+                  (evse) =>
+                    evse.status ===
+                    'CHARGING'
+                ).length
+
+              return (
+                <div
+                  className="version-card remote-location-card"
+                  key={location.id}
+                >
+                  <div>
+                    <div className="version-main remote-location-main">
+                      <div className="version-badge">
                         {location.id}
-                      </strong>
+                      </div>
 
-                      <div className="muted">
-                        {location.name ||
-                          'Unnamed Location'}
+                      <div>
+                        <strong>
+                          {location.name ||
+                            'Unnamed Location'}
+                        </strong>
+
+                        <div className="muted">
+                          {location.address},{' '}
+                          {location.city},{' '}
+                          {location.country}
+                        </div>
                       </div>
                     </div>
 
                     <div className="location-mini-summary">
                       <span>
-                        {location.city}
+                        Party:{' '}
+                        {location.party_id}
                       </span>
 
                       <span>
-                        EVSEs: {evseCount}
+                        EVSEs:{' '}
+                        {evseCount}
                       </span>
 
                       <span>
                         Connectors:{' '}
                         {connectorCount}
                       </span>
+
+                      <span>
+                        Charging:{' '}
+                        {chargingCount}
+                      </span>
                     </div>
+
+                    {(
+                      location.evses || []
+                    ).map((evse) => (
+                      <div
+                        className="endpoint-row remote-evse-row"
+                        key={evse.uid}
+                      >
+                        <div>
+                          <strong>
+                            {evse.evse_id ||
+                              evse.uid}
+                          </strong>
+
+                          <div className="muted">
+                            EVSE status:{' '}
+                            {evse.status}
+                          </div>
+                        </div>
+
+                        <code>
+                          {(
+                            evse.connectors ||
+                            []
+                          )
+                            .map(
+                              (connector) =>
+                                `${connector.standard} · ${connector.power_type} · ${connector.max_electric_power || 0} W`
+                            )
+                            .join(' | ') ||
+                            'No connectors'}
+                        </code>
+                      </div>
+                    ))}
                   </div>
-                )
-              })
-            )}
-          </div>
-        )}
-
-      {/* =====================================================
-          PROGRESS
-      ===================================================== */}
-      <div className="panel">
-        <div className="panel-title">
-          <span>
-            Simulation progress
-          </span>
-
-          {completed && (
-            <span className="success-badge">
-              Backend workflow completed
-            </span>
+                </div>
+              )
+            }
           )}
         </div>
+      )}
 
-        {steps.length === 0 ? (
-          <div className="empty">
-            Choose a scenario and run the
-            simulation.
-          </div>
-        ) : (
-          <>
-            <div className="flow-note">
-              <Terminal size={17} />
-
-              <span>
-                These stages represent the
-                workflow executed through the
-                FastAPI backend.
-              </span>
-            </div>
-
-            <div className="step-list">
-              {steps.map((step, index) => (
-                <div
-                  className="step"
-                  key={index}
-                >
-                  <span className="step-dot">
-                    {index + 1}
-                  </span>
-
-                  <div>
-                    <strong>
-                      {step.label}
-                    </strong>
-
-                    <div className="muted">
-                      {step.status}
-                    </div>
-                  </div>
-
-                  {step.status ===
-                    'Completed' && (
-                    <BadgeCheck
-                      size={18}
-                    />
-                  )}
-
-                  {step.status ===
-                    'Running' && (
-                    <RefreshCw
-                      size={18}
-                      className="spin"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* =====================================================
-          EXPLANATION
-      ===================================================== */}
       <div className="panel">
         <div className="panel-title">
           <span>
@@ -4080,98 +4719,43 @@ function Simulation({
         <div className="simulation-explanation">
           <div>
             <strong>
-              Credential Registration
+              Remote client connection
             </strong>
 
             <p>
-              The eMSP discovers the CPO and
-              performs the Credentials handshake.
+              The Hub does not call its own CPO
+              endpoints. It uses the supplied
+              remote CPO Versions URL and Token A
+              to start the OCPI connection.
             </p>
           </div>
 
           <div>
-            <strong>Location Sync</strong>
+            <strong>
+              Credentials bootstrap
+            </strong>
 
             <p>
-              The simulator requests the CPO
-              Location data and displays the
-              returned Location, EVSE and
-              Connector information.
+              The Hub discovers the Credentials
+              receiver, posts its eMSP credentials,
+              receives Token C, and stores the
+              connection details.
             </p>
           </div>
-        </div>
-      </div>
-    </>
-  )
-}
 
+          <div>
+            <strong>
+              Location push
+            </strong>
 
-
-function Logs({
-  activity,
-}: {
-  activity: ActivityRow[]
-}) {
-  return (
-    <>
-      <SectionHeader
-        title="Communication Log"
-        subtitle="Requests launched from the UI are collected here for demo visibility."
-      />
-
-      <div className="panel table-panel">
-        <div className="panel-title">
-          <span>Request history</span>
-          <span className="count-badge">
-            {activity.length}
-          </span>
-        </div>
-
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Method</th>
-                <th>Endpoint</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {activity.map((a, i) => (
-                <tr key={i}>
-                  <td>{a.time}</td>
-                  <td>{a.from}</td>
-                  <td>{a.to}</td>
-
-                  <td>
-                    <span className="method">
-                      {a.method}
-                    </span>
-                  </td>
-
-                  <td>
-                    <code>{a.endpoint}</code>
-                  </td>
-
-                  <td>
-                    <span className="status success">
-                      {a.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {activity.length === 0 && (
-            <div className="empty">
-              No UI requests yet.
-            </div>
-          )}
+            <p>
+              After the handshake, the remote CPO
+              sends a Location to the Hub's eMSP
+              Locations Receiver using PUT. The Hub
+              validates and stores the CPO-owned
+              Location, EVSE and Connector hierarchy.
+            </p>
+          </div>
         </div>
       </div>
     </>

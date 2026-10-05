@@ -21,7 +21,11 @@ from app.modules.locations.schemas import (
 
 locations: dict[str, Location] = {}
 
+# =========================================================
+# Locations received by the eMSP
+# =========================================================
 
+received_location_ids: set[str] = set()
 # =========================================================
 # Sample location
 # =========================================================
@@ -95,10 +99,16 @@ locations[sample_location.id] = sample_location
 
 def get_all_locations() -> list[Location]:
     """
-    Return all stored locations.
-    """
-    return list(locations.values())
+    Return CPO-owned Locations.
 
+    Locations received by the eMSP through the
+    Locations Receiver are excluded from this list.
+    """
+    return [
+        location
+        for location_id, location in locations.items()
+        if location_id not in received_location_ids
+    ]
 
 def get_location(location_id: str) -> Location | None:
     """
@@ -375,6 +385,31 @@ def update_location(
     locations[location.id] = location
 
     return location
+
+def store_emsp_received_location(
+    location: Location,
+) -> Location:
+    """
+    Store a Location received through the eMSP
+    Locations Receiver interface.
+    """
+
+    locations[location.id] = location
+    received_location_ids.add(location.id)
+
+    return location
+
+
+def get_received_locations() -> list[Location]:
+    """
+    Return Locations that were received by the eMSP.
+    """
+
+    return [
+        locations[location_id]
+        for location_id in received_location_ids
+        if location_id in locations
+    ]
 
 
 def patch_location(

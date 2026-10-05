@@ -4,14 +4,15 @@ from secrets import token_hex
 import os
 
 from fastapi import APIRouter, Header, HTTPException, Response
-from pydantic import HttpUrl
-
+from pydantic import BaseModel, Field, HttpUrl
+import httpx
 from app.core.response import OCPIResponse, create_ocpi_response
-from app.modules.credentials.client import (
-    get_connection_status,
-    get_stored_cpo_credentials,
-    import_cpo_credentials,
-    perform_emsp_handshake,
+from app.modules.credentials.client import perform_emsp_handshake
+from app.modules.credentials.cpo_client import (
+    clear_connection,
+    fetch_cpo_locations,
+    get_connection_summary,
+    handshake_with_cpo,
 )
 from app.modules.credentials.schemas import (
     BusinessDetails,
@@ -20,7 +21,6 @@ from app.modules.credentials.schemas import (
     Role,
 )
 
-
 router = APIRouter(
     prefix="/ocpi",
     tags=["Credentials"],
@@ -28,18 +28,15 @@ router = APIRouter(
 
 
 # =========================================================
-# Bootstrap Tokens
+# Bootstrap tokens
 # =========================================================
+#
+# These are the initial tokens used before the first
+# successful registration.
+#
 
-# Initial CPO simulator token.
-# This is only for the simulator's own CPO role.
 CPO_BOOTSTRAP_TOKEN = "CPO-SIMULATOR-TOKEN-A"
-
-# Initial eMSP bootstrap token is loaded from the environment.
-EMSP_BOOTSTRAP_TOKEN: str = os.getenv(
-    "EMSP_TOKEN_A",
-    "",
-)
+EMSP_BOOTSTRAP_TOKEN: str = os.getenv("EMSP_TOKEN_A", "")
 
 if not EMSP_BOOTSTRAP_TOKEN:
     raise RuntimeError(
@@ -48,43 +45,44 @@ if not EMSP_BOOTSTRAP_TOKEN:
 
 
 # =========================================================
-# Registration State
+# Registration state
 # =========================================================
-
-# These variables store credentials received from
-# remote OCPI parties.
+#
+# These variables store credentials received from the
+# remote OCPI party.
+#
 
 registered_cpo_client: Credentials | None = None
 registered_emsp_client: Credentials | None = None
 
 
 # =========================================================
-# Current Authorization Tokens
+# Current authorization tokens
 # =========================================================
-
+#
 # These are the tokens currently accepted in the
 # Authorization header.
+#
 
 current_cpo_auth_token = CPO_BOOTSTRAP_TOKEN
 current_emsp_auth_token = EMSP_BOOTSTRAP_TOKEN
 
 
 # =========================================================
-# Token Generation
+# Token generation
 # =========================================================
 
 def generate_credentials_token() -> str:
     """
-    Generate a 64-character hexadecimal credentials token.
+    Generate a 64-character hexadecimal token.
 
-    token_hex(32) produces 64 hexadecimal characters.
+    token_hex(32) = 64 hexadecimal characters.
     """
-
     return token_hex(32)
 
 
 # =========================================================
-# Token Rotation - CPO
+# Token rotation
 # =========================================================
 
 def rotate_cpo_token() -> str:
@@ -102,10 +100,6 @@ def rotate_cpo_token() -> str:
     return new_token
 
 
-# =========================================================
-# Token Rotation - eMSP
-# =========================================================
-
 def rotate_emsp_token() -> str:
     """
     Generate and activate a new eMSP authorization token.
@@ -122,14 +116,14 @@ def rotate_emsp_token() -> str:
 
 
 # =========================================================
-# Authorization Encoding Helper
+# Authorization encoding helper
 # =========================================================
 
 def encode_ocpi_authorization(token: str) -> str:
     """
     Create an OCPI Authorization header value.
 
-    Format:
+    Example:
         Token <Base64-encoded-token>
     """
 
@@ -141,7 +135,7 @@ def encode_ocpi_authorization(token: str) -> str:
 
 
 # =========================================================
-# Authorization Validation
+# Authorization validation
 # =========================================================
 
 def validate_ocpi_authorization(
@@ -152,6 +146,7 @@ def validate_ocpi_authorization(
     Validate an OCPI Authorization header.
 
     Expected format:
+
         Authorization: Token <Base64-token>
     """
 
@@ -184,10 +179,7 @@ def validate_ocpi_authorization(
             validate=True,
         ).decode("utf-8")
 
-    except (
-        BinasciiError,
-        UnicodeDecodeError,
-    ):
+    except (BinasciiError, UnicodeDecodeError):
         raise HTTPException(
             status_code=401,
             detail="Invalid Base64 credentials token.",
@@ -201,7 +193,7 @@ def validate_ocpi_authorization(
 
 
 # =========================================================
-# Server Credentials - CPO
+# Server credentials
 # =========================================================
 
 CPO_SERVER_CREDENTIALS = Credentials(
@@ -225,15 +217,10 @@ CPO_SERVER_CREDENTIALS = Credentials(
 )
 
 
-# =========================================================
-# Server Credentials - eMSP
-# =========================================================
-
 EMSP_SERVER_CREDENTIALS = Credentials(
     token=EMSP_BOOTSTRAP_TOKEN,
     url=HttpUrl(
-        "https://growing-lagged-skittle.ngrok-free.dev"
-        "/ocpi/emsp/versions"
+        "https://growing-lagged-skittle.ngrok-free.dev/ocpi/emsp/versions"
     ),
     roles=[
         CredentialsRole(
@@ -254,6 +241,7 @@ EMSP_SERVER_CREDENTIALS = Credentials(
 # =========================================================
 # CPO Credentials
 # =========================================================
+
 
 @router.get(
     "/cpo/2.2.1/credentials",
@@ -331,10 +319,13 @@ def register_cpo_credentials(
             ),
         )
 
+    # Store remote party credentials.
     registered_cpo_client = credentials
 
+    # Rotate the server's authorization token.
     rotate_cpo_token()
 
+    # Return the simulator's NEW credentials.
     return create_ocpi_response(
         data=CPO_SERVER_CREDENTIALS,
         response=response,
@@ -383,10 +374,13 @@ def update_cpo_credentials(
             ),
         )
 
+    # Replace stored remote credentials.
     registered_cpo_client = credentials
 
+    # Rotate token again.
     rotate_cpo_token()
 
+    # Return the simulator's NEW credentials.
     return create_ocpi_response(
         data=CPO_SERVER_CREDENTIALS,
         response=response,
@@ -434,6 +428,7 @@ def delete_cpo_credentials(
 
     registered_cpo_client = None
 
+    # Reset the simulator for another test registration.
     current_cpo_auth_token = CPO_BOOTSTRAP_TOKEN
     CPO_SERVER_CREDENTIALS.token = CPO_BOOTSTRAP_TOKEN
 
@@ -448,6 +443,7 @@ def delete_cpo_credentials(
 # =========================================================
 # eMSP Credentials
 # =========================================================
+
 
 @router.get(
     "/emsp/2.2.1/credentials",
@@ -525,10 +521,13 @@ def register_emsp_credentials(
             ),
         )
 
+    # Store remote party credentials.
     registered_emsp_client = credentials
 
+    # Rotate the server's authorization token.
     rotate_emsp_token()
 
+    # Return the simulator's NEW credentials.
     return create_ocpi_response(
         data=EMSP_SERVER_CREDENTIALS,
         response=response,
@@ -577,10 +576,13 @@ def update_emsp_credentials(
             ),
         )
 
+    # Replace stored remote credentials.
     registered_emsp_client = credentials
 
+    # Rotate token again.
     rotate_emsp_token()
 
+    # Return the simulator's NEW credentials.
     return create_ocpi_response(
         data=EMSP_SERVER_CREDENTIALS,
         response=response,
@@ -628,6 +630,7 @@ def delete_emsp_credentials(
 
     registered_emsp_client = None
 
+    # Reset the simulator for another test registration.
     current_emsp_auth_token = EMSP_BOOTSTRAP_TOKEN
     EMSP_SERVER_CREDENTIALS.token = EMSP_BOOTSTRAP_TOKEN
 
@@ -637,8 +640,6 @@ def delete_emsp_credentials(
         request_id=x_request_id,
         correlation_id=x_correlation_id,
     )
-
-
 # =========================================================
 # eMSP - Perform CPO Credentials Handshake
 # =========================================================
@@ -659,40 +660,12 @@ async def emsp_handshake(
     ),
 ):
     """
-    Start or reuse the OCPI Credentials connection.
-
-    If Numocity CPO credentials are already stored locally,
-    they are returned without attempting another bootstrap
-    registration.
-
-    Otherwise, a first-time handshake is performed.
+    Start the OCPI Credentials handshake with the
+    configured Numocity CPO.
     """
 
     try:
-
-        # -------------------------------------------------
-        # Step 1: Check for an existing connection
-        # -------------------------------------------------
-
-        stored_credentials = (
-            get_stored_cpo_credentials()
-        )
-
-        if stored_credentials is not None:
-            return create_ocpi_response(
-                data=stored_credentials,
-                response=response,
-                request_id=x_request_id,
-                correlation_id=x_correlation_id,
-            )
-
-        # -------------------------------------------------
-        # Step 2: First-time handshake
-        # -------------------------------------------------
-
-        cpo_credentials = (
-            await perform_emsp_handshake()
-        )
+        cpo_credentials = await perform_emsp_handshake()
 
         return create_ocpi_response(
             data=cpo_credentials,
@@ -703,84 +676,213 @@ async def emsp_handshake(
 
     except Exception as exc:
         raise HTTPException(
-            status_code=502,
-            detail=f"OCPI handshake failed: {repr(exc)}",
-        )
-
+        status_code=502,
+        detail=f"OCPI handshake failed: {repr(exc)}",
+    )
 
 # =========================================================
-# eMSP - Connection Status
+# Simulator: remote CPO connection (Hub southbound side)
 # =========================================================
 
-@router.get(
-    "/emsp/connection",
-)
-def emsp_connection_status():
+class RemoteCpoHandshakeRequest(BaseModel):
     """
-    Return the current eMSP-to-CPO connection status.
+    Simulator-management input used by the UI to connect this
+    platform to a remote CPO as an OCPI client.
 
-    Authentication tokens are intentionally not returned.
+    This endpoint is intentionally under /simulator and is not
+    itself an OCPI protocol endpoint.
     """
 
-    return get_connection_status()
-# =========================================================
-# Simulator - Import Existing CPO Credentials
-# =========================================================
+    versions_url: HttpUrl = Field(
+        ..., description="Remote CPO /ocpi/.../versions URL"
+    )
+    token_a: str = Field(
+        ...,
+        min_length=1,
+        max_length=128,
+        description="Bootstrap CREDENTIALS_TOKEN_A supplied by the CPO",
+    )
+    emsp_versions_url: HttpUrl = Field(
+        ...,
+        description="Public /ocpi/emsp/versions URL for this simulator",
+    )
+    party_id: str = Field(
+        "TSP",
+        min_length=3,
+        max_length=3,
+    )
+    country_code: str = Field(
+        "IN",
+        min_length=2,
+        max_length=2,
+    )
+    business_name: str = Field(
+        "TejasSP",
+        min_length=1,
+        max_length=100,
+    )
+
 
 @router.post(
-    "/simulator/emsp/credentials/import",
-    response_model=dict[str, object],
+    "/simulator/cpo/handshake",
+    response_model=OCPIResponse[dict],
 )
-def import_existing_cpo_credentials(
-    credentials: Credentials,
+async def simulator_cpo_handshake(
+    request: RemoteCpoHandshakeRequest,
+    response: Response,
+    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
 ):
     """
-    Import CPO credentials that were already issued
-    by the remote CPO.
-
-    This endpoint is for simulator administration/testing
-    and is not an OCPI protocol endpoint.
-
-    The authentication token is intentionally not returned
-    in the response.
+    Connect the simulator (acting as an eMSP/Hub southbound client)
+    to a remote CPO and perform the OCPI Credentials registration flow.
     """
 
     try:
-        imported_credentials = import_cpo_credentials(
-            credentials
+        result = await handshake_with_cpo(
+            versions_url=str(request.versions_url),
+            token_a=request.token_a,
+            emsp_versions_url=str(request.emsp_versions_url),
+            party_id=request.party_id,
+            country_code=request.country_code,
+            business_name=request.business_name,
         )
 
-        cpo_role = (
-            imported_credentials.roles[0]
-            if imported_credentials.roles
-            else None
+        return create_ocpi_response(
+            data=result,
+            response=response,
+            request_id=x_request_id,
+            correlation_id=x_correlation_id,
         )
-
-        return {
-            "success": True,
-            "message": "CPO credentials imported successfully.",
-            "connected": True,
-            "role": "EMSP",
-            "ocpi_version": "2.2.1",
-            "cpo_name": (
-                cpo_role.business_details.name
-                if cpo_role
-                else None
-            ),
-            "cpo_party_id": (
-                cpo_role.party_id
-                if cpo_role
-                else None
-            ),
-            "cpo_country_code": (
-                cpo_role.country_code
-                if cpo_role
-                else None
-            ),
-        }
 
     except Exception as exc:
         raise HTTPException(
-            status_code=400,
-            detail=f"Failed to import CPO credentials: {repr(exc)}",
+            status_code=502,
+            detail=f"Remote CPO handshake failed: {exc}",
+        ) from exc
+
+
+@router.get(
+    "/simulator/cpo/connection",
+    response_model=OCPIResponse[dict],
+)
+def simulator_cpo_connection(
+    response: Response,
+    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+):
+    """Return safe details about the currently configured remote CPO."""
+
+    return create_ocpi_response(
+        data=get_connection_summary(),
+        response=response,
+        request_id=x_request_id,
+        correlation_id=x_correlation_id,
+    )
+
+
+@router.post(
+    "/simulator/cpo/locations",
+    response_model=OCPIResponse[list[dict]],
+)
+async def simulator_fetch_cpo_locations(
+    response: Response,
+    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+):
+    """Fetch remote CPO Locations using Token C returned by handshake."""
+
+    try:
+        locations = await fetch_cpo_locations()
+
+        return create_ocpi_response(
+            data=locations,
+            response=response,
+            request_id=x_request_id,
+            correlation_id=x_correlation_id,
         )
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Remote CPO Locations request failed: {exc}",
+        ) from exc
+
+
+@router.delete(
+    "/simulator/cpo/connection",
+    response_model=OCPIResponse[None],
+)
+def simulator_clear_cpo_connection(
+    response: Response,
+    x_request_id: str = Header(..., alias="X-Request-ID"),
+    x_correlation_id: str = Header(..., alias="X-Correlation-ID"),
+):
+    """Clear only this simulator's local remote-CPO connection state."""
+
+    clear_connection()
+
+    return create_ocpi_response(
+        data=None,
+        response=response,
+        request_id=x_request_id,
+        correlation_id=x_correlation_id,
+    )
+
+# =========================================================
+# Simulator - Trigger remote CPO Location Push
+# =========================================================
+
+@router.post(
+    "/simulator/cpo/push-location",
+)
+async def simulator_cpo_push_location():
+    """
+    Simulator-only control endpoint.
+
+    The browser calls the Hub.
+    The Hub tells the Mock CPO to perform its
+    CPO -> eMSP Location PUT push.
+
+    The actual OCPI request is still:
+
+        CPO -> PUT -> eMSP
+    """
+
+    mock_cpo_control_url = (
+        "http://127.0.0.1:9001/simulator/push-location"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                mock_cpo_control_url
+            )
+
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = {
+                "status_code": response.status_code,
+                "status_message": response.text,
+            }
+
+        if response.status_code >= 400:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=payload.get(
+                    "detail",
+                    "Remote CPO Location push failed.",
+                ),
+            )
+
+        return payload
+
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Could not contact the Mock CPO simulator. "
+                "Make sure mock_cpo.py is running on port 9001."
+            ),
+        ) from exc

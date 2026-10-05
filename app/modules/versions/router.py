@@ -117,7 +117,7 @@ def get_emsp_versions(
         Version(
             version="2.2.1",
             url=HttpUrl(
-                "https://growing-lagged-skittle.ngrok-free.dev/ocpi/emsp/2.2.1"
+                "http://127.0.0.1:8000/ocpi/emsp/2.2.1"
             ),
         )
     ]
@@ -152,13 +152,23 @@ def get_emsp_version_details(
     version_details = VersionDetails(
         version="2.2.1",
         endpoints=[
+            # Credentials endpoint
             Endpoint(
                 identifier=ModuleID.CREDENTIALS,
                 role=InterfaceRole.SENDER,
                 url=HttpUrl(
-                    "https://growing-lagged-skittle.ngrok-free.dev/ocpi/emsp/2.2.1/credentials"
+                    "http://127.0.0.1:8000/ocpi/emsp/2.2.1/credentials"
                 ),
-            )
+            ),
+
+            # Locations Receiver endpoint
+            Endpoint(
+                identifier=ModuleID.LOCATIONS,
+                role=InterfaceRole.RECEIVER,
+                url=HttpUrl(
+                    "http://127.0.0.1:8000/ocpi/emsp/2.2.1/locations"
+                ),
+            ),
         ],
     )
 

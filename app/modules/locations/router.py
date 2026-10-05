@@ -25,6 +25,8 @@ from app.modules.locations.service import (
     update_connector,
     update_evse,
     update_location,
+        get_received_locations,
+            store_emsp_received_location,
 )
 router = APIRouter(
     prefix="/ocpi",
@@ -370,7 +372,7 @@ def put_emsp_location(
             detail="Location ID does not match location data.",
         )
 
-    updated = update_location(location)
+    updated = store_emsp_received_location(location)
 
     return create_ocpi_response(
         data=updated,
@@ -890,6 +892,41 @@ def patch_emsp_connector(
 
     return create_ocpi_response(
         data=None,
+        response=response,
+        request_id=x_request_id,
+        correlation_id=x_correlation_id,
+    )
+# =========================================================
+# Simulator - eMSP received Locations
+# =========================================================
+
+
+@router.get(
+    "/simulator/emsp/received-locations",
+    response_model=OCPIResponse[list[Location]],
+)
+def get_simulator_emsp_received_locations(
+    response: Response,
+    x_request_id: str = Header(
+        ...,
+        alias="X-Request-ID",
+    ),
+    x_correlation_id: str = Header(
+        ...,
+        alias="X-Correlation-ID",
+    ),
+):
+    """
+    Simulator-only endpoint.
+
+    Returns Locations that were received by the
+    eMSP through the OCPI Locations Receiver.
+    """
+
+    locations = get_received_locations()
+
+    return create_ocpi_response(
+        data=locations,
         response=response,
         request_id=x_request_id,
         correlation_id=x_correlation_id,
